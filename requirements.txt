@@ -1,5 +1,5 @@
 discord
-discord[voice]
+davey
 PyNaCl
 dotenv
 gtts

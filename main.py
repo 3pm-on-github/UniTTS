@@ -1,11 +1,24 @@
 import discord
-import dotenv # type: ignore
+import dotenv
 import os
+from collections import deque
 from gtts import gTTS
 
 dotenv.load_dotenv()
 bot = discord.Client(intents=discord.Intents.all())
 vc = None
+queue = deque()
+
+def _play_next(error=None):
+    if queue:
+        text = queue.popleft()
+        filename = f"{hash(text)}.mp3"
+        tts = gTTS(text)
+        tts.save(filename)
+        def after(error):
+            os.remove(filename)
+            _play_next()
+        vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
 
 @bot.event
 async def on_ready():
@@ -19,14 +32,19 @@ async def on_ready():
 async def on_message(msg):
     if msg.author.bot or msg.channel.id != 1437271857140076606:
         return
-    
+
     if msg.content.startswith("$"):
         message = msg.content[1:].strip()
-        tts = gTTS(message)
-        tts.save(f"{str(msg.id)}.mp3")
-        def after(_):
-            os.remove(f"{str(msg.id)}.mp3")
-        vc.play(discord.FFmpegPCMAudio(source=f"{str(msg.id)}.mp3"), after=after)
+        if vc.is_playing():
+            queue.append(message)
+        else:
+            filename = f"{msg.id}.mp3"
+            tts = gTTS(message)
+            tts.save(filename)
+            def after(error):
+                os.remove(filename)
+                _play_next()
+            vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
     elif msg.content == "MI BOMBO":
         vc.play(discord.FFmpegPCMAudio(source="mibombo.mp3"))
 

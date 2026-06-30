@@ -14,9 +14,11 @@ language_choices = []
 langs = {"de":"German","en":"English","es":"Spanish","fi":"Finnish","fr":"French","hu":"Hungarian","id":"Indonesian","is":"Icelandic","it":"Italian","ja":"Japanese","ko":"Korean","lt":"Lithuanian","ne":"Nepali","nl":"Dutch","no":"Norwegian","pa":"Punjabi (Gurmukhi)","pl":"Polish","pt-PT":"Portuguese (Portugal)","ro":"Romanian","ru":"Russian","sv":"Swedish","tr":"Turkish","uk":"Ukrainian","vi":"Vietnamese","zh-CN":"Chinese (Simplified)"}
 for lang_code, lang_name in langs.items():
     language_choices.append(app_commands.Choice(name=lang_name, value=lang_code))
+
 class KillEveryoneError(Exception):
     """Kill Everyone"""
     pass
+
 def read_data():
     return json.load(open("data.json", "rb"))
 
@@ -79,7 +81,7 @@ def _play_next(error=None):
 @bot.event
 async def on_ready():
     global vc, voice_channel
-    #await tree.sync()
+    await tree.sync()
     print("UniTTS is online!")
     guild = bot.get_guild(1437258836896514212)
     voice_channel = guild.get_channel(1437271857140076606)
@@ -146,6 +148,7 @@ async def on_message(msg):
 @tree.command(name="ping", description="Ping...")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message(f"Pong! {round(bot.latency*1000)}ms")
+
 @tree.command(name="killeveryone", description="KillEveryone")
 async def killeveryone(interaction: discord.Interaction):
     raise KillEveryoneError("Everyone died")

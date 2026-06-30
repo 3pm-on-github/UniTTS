@@ -151,6 +151,7 @@ async def ping(interaction: discord.Interaction):
 
 @tree.command(name="killeveryone", description="KillEveryone")
 async def killeveryone(interaction: discord.Interaction):
+    await interaction.response.send_message("Killed everyone", ephemeral=True)
     raise KillEveryoneError("Everyone died")
 
 @tree.command(name="skip-tts", description="Skip the current TTS.")

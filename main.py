@@ -1,4 +1,4 @@
-import discord, json, os, re, subprocess, random, sys
+import discord, json, os, re, subprocess, random, sys, time, traceback
 import dotenv # type: ignore
 from collections import deque
 from gtts import gTTS # type: ignore
@@ -86,7 +86,11 @@ async def on_ready():
 @bot.event
 async def on_error(event, *args, **kwargs):
     exc_type, exc_value, _ = sys.exc_info()
-    await voice_channel.send(f"<@932666698438418522> yo twin, {exc_type.__name__}: {exc_value}\nalso heres a burger", file=discord.File("burger.png"))
+    filename = str(time.time_ns())+".txt"
+    if not "logs" in os.listdir():
+        os.mkdir("logs")
+    traceback.print_exc(file=open(f"logs/{filename}", "w"))
+    await voice_channel.send(f"<@932666698438418522> yo twin, {exc_type.__name__}: {exc_value}\ni printed a log in logs/{filename} if you want\nalso heres a burger", file=discord.File("burger.png"))
 
 @bot.event
 async def on_message(msg):

@@ -96,6 +96,18 @@ async def on_error(event, *args, **kwargs):
     traceback.print_exc(file=open(f"logs/{filename}", "w"))
     await voice_channel.send(f"<@932666698438418522> yo twin, {exc_type.__name__}: {exc_value}\ni printed a log in logs/{filename} if you want\nalso heres a burger", file=discord.File("burger.png"))
 
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    exc = error.original if isinstance(error, discord.app_commands.CommandInvokeError) else error
+    filename = str(time.time_ns()) + ".txt"
+    os.makedirs("logs", exist_ok=True)
+    traceback.print_exception(type(exc), exc, exc.__traceback__, file=open(f"logs/{filename}", "w"))
+    await voice_channel.send(
+        f"<@932666698438418522> yo twin, {type(exc).__name__}: {exc}\n"
+        f"i printed a log in logs/{filename} if you want\nalso heres a burger",
+        file=discord.File("burger.png"),
+    )
+
 @bot.event
 async def on_message(msg):
     if msg.author.bot or msg.channel.id != 1437271857140076606 or not vc:

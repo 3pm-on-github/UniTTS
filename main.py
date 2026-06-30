@@ -5,7 +5,6 @@ import os
 import re
 import subprocess
 import random
-import gtts # type: ignore
 from collections import deque
 from gtts import gTTS # type: ignore
 from discord import app_commands
@@ -65,10 +64,14 @@ def _play_next(error=None):
         filename = f"{msg.id}.mp3"
         voice = read_data()["user_settings"][str(msg.author.id)]["voice"]
         message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
+        if message.startswith("https://"): return
         for mention in msg.mentions:
             name = mention.nick or mention.global_name
             message = re.sub(rf"<@!?{mention.id}>", name, message)
         message = re.sub(r"<t:\d+:\w+>", "", message)
+        message = re.sub(r"<:\w+:\d+>", "", message)
+        message = message.encode("ascii", "ignore").decode("ascii")
+        if not message: return
         generate_tts(message, voice, filename)
         def after(error):
             os.remove(filename)
@@ -78,7 +81,7 @@ def _play_next(error=None):
 @bot.event
 async def on_ready():
     global vc
-    await tree.sync()
+    #await tree.sync()
     print("UniTTS is online!")
     guild = bot.get_guild(1437258836896514212)
     voice_channel = guild.get_channel(1437271857140076606)
@@ -86,7 +89,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(msg):
-    if msg.author.bot or msg.channel.id != 1437271857140076606:
+    if msg.author.bot or msg.channel.id != 1437271857140076606 or not vc:
         return
 
     data = read_data()
@@ -115,10 +118,14 @@ async def on_message(msg):
             filename = f"{msg.id}.mp3"
             voice = data["user_settings"][str(msg.author.id)]["voice"]
             message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
+            if message.startswith("https://"): return
             for mention in msg.mentions:
                 name = mention.nick or mention.global_name
                 message = re.sub(rf"<@!?{mention.id}>", name, message)
             message = re.sub(r"<t:\d+:\w+>", "", message)
+            message = re.sub(r"<:\w+:\d+>", "", message)
+            message = message.encode("ascii", "ignore").decode("ascii")
+            if not message: return
             generate_tts(message, voice, filename)
             def after(error):
                 os.remove(filename)

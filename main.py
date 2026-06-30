@@ -96,7 +96,7 @@ async def on_error(event, *args, **kwargs):
     traceback.print_exc(file=open(f"logs/{filename}", "w"))
     await voice_channel.send(f"<@932666698438418522> yo twin, {exc_type.__name__}: {exc_value}\ni printed a log in logs/{filename} if you want\nalso heres a burger", file=discord.File("burger.png"))
 
-@bot.tree.error
+@tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     exc = error.original if isinstance(error, discord.app_commands.CommandInvokeError) else error
     filename = str(time.time_ns()) + ".txt"

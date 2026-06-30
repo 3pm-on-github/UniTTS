@@ -1,21 +1,70 @@
 import discord
-import dotenv
+import dotenv # type: ignore
+import json
 import os
 import re
+import subprocess
+import random
 from collections import deque
-from gtts import gTTS
+from gtts import gTTS # type: ignore
+from discord import app_commands
 
 dotenv.load_dotenv()
 bot = discord.Client(intents=discord.Intents.all())
+tree = app_commands.CommandTree(bot)
 vc = None
 queue = deque()
 
+def read_data():
+    return json.load(open("data.json", "rb"))
+
+def write_data(data):
+    return open("data.json", "w").write(json.dumps(data))
+
+def generate_tts(message, voice, filename):
+    if voice["type"] == "gtts":
+        tts = gTTS(message)
+        tts.save(filename)
+    elif voice["type"] == "sam":
+        pitch = str(voice["pitch"])
+        speed = str(voice["speed"])
+        mouth = str(voice["mouth"])
+        throat = str(voice["throat"])
+        randomnum = random.randint(0, 999)
+        if os.name == "nt":
+            subprocess.run([
+                "sam.exe",
+                "-wav", str(randomnum)+".wav",
+                message,
+                "-pitch", str(pitch),
+                "-speed", str(speed),
+                "-mouth", str(mouth),
+                "-throat", str(throat),
+            ])
+        else:
+            subprocess.run([
+                "./sam",
+                "-wav", str(randomnum)+".wav",
+                message,
+                "-pitch", str(pitch),
+                "-speed", str(speed),
+                "-mouth", str(mouth),
+                "-throat", str(throat),
+            ])
+        os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=0.5\" -b:a 320k {filename}")
+        os.system(f"rm {str(randomnum)}.wav")
+
 def _play_next(error=None):
     if queue:
-        text = queue.popleft()
-        filename = f"{hash(text)}.mp3"
-        tts = gTTS(text)
-        tts.save(filename)
+        msg = queue.popleft()
+        filename = f"{msg.id}.mp3"
+        voice = read_data()["user_settings"][str(msg.author.id)]["voice"]
+        message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
+        for mention in msg.mentions:
+            name = mention.nick or mention.global_name
+            message = re.sub(rf"<@!?{mention.id}>", name, message)
+        message = re.sub(r"<t:\d+:\w+>", "", message)
+        generate_tts(message, voice, filename)
         def after(error):
             os.remove(filename)
             _play_next()
@@ -24,6 +73,7 @@ def _play_next(error=None):
 @bot.event
 async def on_ready():
     global vc
+    await tree.sync()
     print("UniTTS is online!")
     guild = bot.get_guild(1437258836896514212)
     voice_channel = guild.get_channel(1437271857140076606)
@@ -34,23 +84,79 @@ async def on_message(msg):
     if msg.author.bot or msg.channel.id != 1437271857140076606:
         return
 
-    if msg.content.startswith("$"):
-        message = msg.content[1:].strip()
-        for mention in msg.mentions:
-            name = mention.nick or mention.global_name
-            message = re.sub(rf"<@!?{mention.id}>", name, message)
-        message = re.sub(r"<t:\d+:\w+>", "", message)
+    data = read_data()
+    if str(msg.author.id) not in data["user_settings"]:
+        data["user_settings"][str(msg.author.id)] = {
+            "always_speak": False,
+            "voice": {
+                "type": "gtts",
+                "pitch": 64,
+                "speed": 72,
+                "mouth": 128,
+                "throat": 128
+            }
+        }
+        write_data(data)
+
+    always_speak = data["user_settings"][str(msg.author.id)]["always_speak"]
+    if msg.content.startswith("$") or always_speak:
         if vc.is_playing():
-            queue.append(message)
+            queue.append(msg)
         else:
             filename = f"{msg.id}.mp3"
-            tts = gTTS(message)
-            tts.save(filename)
+            voice = data["user_settings"][str(msg.author.id)]["voice"]
+            message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
+            for mention in msg.mentions:
+                name = mention.nick or mention.global_name
+                message = re.sub(rf"<@!?{mention.id}>", name, message)
+            message = re.sub(r"<t:\d+:\w+>", "", message)
+            generate_tts(message, voice, filename)
             def after(error):
                 os.remove(filename)
                 _play_next()
             vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
     elif msg.content == "MI BOMBO":
         vc.play(discord.FFmpegPCMAudio(source="mibombo.mp3"))
+
+@tree.command(name="ping", description="Ping...")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Pong! {round(bot.latency*1000)}")
+
+@tree.command(name="set-voice", description="Sets your voice settings")
+@app_commands.describe(
+    always_speak="Always speak when you send a message",
+    tts="Text To Speech system",
+    pitch="SAM Voice Pitch (optional)",
+    speed="SAM Voice Speed (optional)",
+    mouth="SAM Voice Mouth (optional)",
+    throat="SAM Voice Throat (optional)"
+)
+@app_commands.choices(tts=[
+    app_commands.Choice(name="Google TTS", value="gtts"),
+    app_commands.Choice(name="SAM", value="sam")
+])
+async def set_voice(
+    interaction: discord.Interaction,
+    always_speak: bool,
+    tts: app_commands.Choice[str],
+    pitch: int = 64,
+    speed: int = 72,
+    mouth: int = 128,
+    throat: int = 128
+):
+    data = read_data()
+    data["user_settings"][str(interaction.user.id)] = {
+        "always_speak": always_speak,
+        "voice": {
+            "type": tts.value,
+            "pitch": pitch,
+            "speed": speed,
+            "mouth": mouth,
+            "throat": throat
+        }
+    }
+    write_data(data)
+    await interaction.response.send_message("Updated settings!", ephemeral=True)
+
 
 bot.run(os.getenv("BOT_TOKEN"))

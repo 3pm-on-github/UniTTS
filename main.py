@@ -147,7 +147,8 @@ async def ping(interaction: discord.Interaction):
 
 @tree.command(name="skip-tts", description="Skip the current TTS.")
 async def ping(interaction: discord.Interaction):
-    await interaction.response.send_message(f"Pong! {round(bot.latency*1000)}ms")
+    if vc.is_playing():
+        vc.stop()
 
 @tree.command(name="set-voice", description="Sets your voice settings")
 @app_commands.describe(

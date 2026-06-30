@@ -136,10 +136,10 @@ async def ping(interaction: discord.Interaction):
     always_speak="Always speak when you send a message",
     tts="Text To Speech system",
     language="Google TTS Voice Language (optional)",
-    pitch="SAM Voice Pitch (max 255) (optional)",
-    speed="SAM Voice Speed (max 255) (optional)",
-    mouth="SAM Voice Mouth (max 255) (optional)",
-    throat="SAM Voice Throat (max 255) (optional)"
+    pitch="SAM Voice Pitch (max 192) (optional)",
+    speed="SAM Voice Speed (max 192) (optional)",
+    mouth="SAM Voice Mouth (max 192) (optional)",
+    throat="SAM Voice Throat (max 192) (optional)"
 )
 @app_commands.choices(
     tts=[
@@ -164,10 +164,10 @@ async def set_voice(
         "voice": {
             "type": tts.value,
             "language": language.value if language != "en" else "en",
-            "pitch": pitch,
-            "speed": speed,
-            "mouth": mouth,
-            "throat": throat
+            "pitch": max(pitch, 192),
+            "speed": max(speed, 192),
+            "mouth": max(mouth, 192),
+            "throat": max(throat, 192)
         }
     }
     write_data(data)

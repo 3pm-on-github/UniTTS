@@ -149,6 +149,9 @@ async def ping(interaction: discord.Interaction):
 async def ping(interaction: discord.Interaction):
     if vc.is_playing():
         vc.stop()
+        await interaction.response.send_message("Skipped the TTS")
+    else:
+        await interaction.response.send_message("no TTS is playing you dummy dum dum")
 
 @tree.command(name="set-voice", description="Sets your voice settings")
 @app_commands.describe(

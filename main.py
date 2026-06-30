@@ -106,8 +106,9 @@ async def on_message(msg):
 
     always_speak = data["user_settings"][str(msg.author.id)]["always_speak"]
     if msg.content.startswith("$") or always_speak:
-        if len(msg.content) > 300:
-            await msg.channel.send(f"<@{msg.author.id}> Your message is too long! (Max 300 Characters)")
+        if len(msg.content) > 500:
+            await msg.channel.send(f"<@{msg.author.id}> Your message is too long! (Max 500 Characters)")
+            return
         if vc.is_playing():
             queue.append(msg)
         else:

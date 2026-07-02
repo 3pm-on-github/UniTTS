@@ -65,14 +65,6 @@ def generate_tts(message, voice, filename):
         open(str(randomnum)+".wav", "wb").write(r.content)
         os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=1.0\" -b:a 320k {filename}")
         os.system(f"rm {str(randomnum)}.wav")
-    elif voice["type"] == "bonzi":
-        randomnum = random.randint(0, 999)
-        pitch = str(voice["pitch"])
-        speed = str(voice["speed"])
-        r = requests.get(f"https://samtts.com/api/demo/sapi4-tts?text={message}&voice=Adult Male #2, American English (TruVoice)&pitch={str(pitch)}&speed={str(speed)}")
-        open(str(randomnum)+".wav", "wb").write(r.content)
-        os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=1.0\" -b:a 320k {filename}")
-        os.system(f"rm {str(randomnum)}.wav")
 
 def _play_next(error=None):
     if queue:
@@ -209,9 +201,8 @@ async def ping(interaction: discord.Interaction):
 @app_commands.choices(
     tts=[
         app_commands.Choice(name="Google TTS", value="gtts"),
-        app_commands.Choice(name="SAM", value="sam"),
-        app_commands.Choice(name="Microsoft SAM", value="ms-sam"),
-        app_commands.Choice(name="BonziBUDDY", value="bonzi")
+        app_commands.Choice(name="SAM (C64)", value="sam"),
+        app_commands.Choice(name="Microsoft SAM", value="ms-sam")
     ],
     language=language_choices
 )
@@ -231,16 +222,12 @@ async def set_voice(
                 pitch = 64
             case "ms-sam":
                 pitch = 100
-            case "bonzi":
-                pitch = 140
     if pitch == 255:
         match tts.value:
             case "sam":
                 pitch = 72
             case "ms-sam":
                 pitch = 150
-            case "bonzi":
-                pitch = 157
     data = read_data()
     data["user_settings"][str(interaction.user.id)] = {
         "always_speak": always_speak,

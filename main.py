@@ -247,10 +247,10 @@ async def set_voice(
         "voice": {
             "type": tts.value,
             "language": language.value if language != "en" else "en",
-            "pitch": max(pitch, 192),
-            "speed": max(speed, 192),
-            "mouth": max(mouth, 192),
-            "throat": max(throat, 192)
+            "pitch": min(pitch, 192),
+            "speed": min(speed, 192),
+            "mouth": min(mouth, 192),
+            "throat": min(throat, 192)
         }
     }
     write_data(data)

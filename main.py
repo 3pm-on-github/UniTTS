@@ -1,4 +1,4 @@
-import discord, json, os, re, subprocess, random, sys, time, traceback
+import discord, json, os, re, subprocess, random, sys, time, traceback, requests
 import dotenv # type: ignore
 from collections import deque
 from gtts import gTTS # type: ignore
@@ -57,6 +57,22 @@ def generate_tts(message, voice, filename):
             ])
         os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=0.5\" -b:a 320k {filename}")
         os.system(f"rm {str(randomnum)}.wav")
+    elif voice["type"] == "ms-sam":
+        randomnum = random.randint(0, 999)
+        pitch = str(voice["pitch"])
+        speed = str(voice["speed"])
+        r = requests.get(f"https://samtts.com/api/demo/sapi4-tts?text={message}&voice=Sam&pitch={str(pitch)}&speed={str(speed)}")
+        open(str(randomnum)+".wav", "wb").write(r.content)
+        os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=1.0\" -b:a 320k {filename}")
+        os.system(f"rm {str(randomnum)}.wav")
+    elif voice["type"] == "bonzi":
+        randomnum = random.randint(0, 999)
+        pitch = str(voice["pitch"])
+        speed = str(voice["speed"])
+        r = requests.get(f"https://samtts.com/api/demo/sapi4-tts?text={message}&voice=Adult Male #2, American English (TruVoice)&pitch={str(pitch)}&speed={str(speed)}")
+        open(str(randomnum)+".wav", "wb").write(r.content)
+        os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=1.0\" -b:a 320k {filename}")
+        os.system(f"rm {str(randomnum)}.wav")
 
 def _play_next(error=None):
     if queue:
@@ -99,14 +115,20 @@ async def on_error(event, *args, **kwargs):
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     exc = error.original if isinstance(error, discord.app_commands.CommandInvokeError) else error
-    filename = str(time.time_ns()) + ".txt"
-    os.makedirs("logs", exist_ok=True)
-    traceback.print_exception(type(exc), exc, exc.__traceback__, file=open(f"logs/{filename}", "w"))
-    await voice_channel.send(
-        f"<@932666698438418522> yo twin, {type(exc).__name__}: {exc}\n"
-        f"i printed a log in logs/{filename} if you want\nalso heres a burger",
-        file=discord.File("burger.png"),
-    )
+    if type(exc).__name__ != "KillEveryoneError":
+        filename = str(time.time_ns()) + ".txt"
+        os.makedirs("logs", exist_ok=True)
+        traceback.print_exception(type(exc), exc, exc.__traceback__, file=open(f"logs/{filename}", "w"))
+        await voice_channel.send(
+            f"<@932666698438418522> yo twin, {type(exc).__name__}: {exc}\n"
+            f"i printed a log in logs/{filename} if you want\nalso heres a burger",
+            file=discord.File("burger.png"),
+        )
+    else:
+        await voice_channel.send(
+            "i killed everyone\nalso heres a burger",
+            file=discord.File("burger.png"),
+        )
 
 @bot.event
 async def on_message(msg):
@@ -179,15 +201,17 @@ async def ping(interaction: discord.Interaction):
     always_speak="Always speak when you send a message",
     tts="Text To Speech system",
     language="Google TTS Voice Language (optional)",
-    pitch="SAM Voice Pitch (max 192) (optional)",
-    speed="SAM Voice Speed (max 192) (optional)",
+    pitch="Voice Pitch (max 192) (optional)",
+    speed="Voice Speed (max 192) (optional)",
     mouth="SAM Voice Mouth (max 192) (optional)",
     throat="SAM Voice Throat (max 192) (optional)"
 )
 @app_commands.choices(
     tts=[
         app_commands.Choice(name="Google TTS", value="gtts"),
-        app_commands.Choice(name="SAM", value="sam")
+        app_commands.Choice(name="SAM", value="sam"),
+        app_commands.Choice(name="Microsoft SAM", value="ms-sam"),
+        app_commands.Choice(name="BonziBUDDY", value="bonzi")
     ],
     language=language_choices
 )
@@ -196,11 +220,27 @@ async def set_voice(
     always_speak: bool,
     tts: app_commands.Choice[str],
     language: app_commands.Choice[str] = "en",
-    pitch: int = 64,
-    speed: int = 72,
+    pitch: int = 255,
+    speed: int = 255,
     mouth: int = 128,
     throat: int = 128
 ):
+    if pitch == 255:
+        match tts.value:
+            case "sam":
+                pitch = 64
+            case "ms-sam":
+                pitch = 100
+            case "bonzi":
+                pitch = 140
+    if pitch == 255:
+        match tts.value:
+            case "sam":
+                pitch = 72
+            case "ms-sam":
+                pitch = 150
+            case "bonzi":
+                pitch = 157
     data = read_data()
     data["user_settings"][str(interaction.user.id)] = {
         "always_speak": always_speak,

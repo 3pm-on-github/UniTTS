@@ -98,7 +98,7 @@ async def on_ready():
     await tree.sync()
     print("UniTTS is online!")
     guild = bot.get_guild(1437258836896514212)
-    voice_channel = guild.get_channel(1437271857140076606)
+    voice_channel = guild.get_channel(1524790106278596912)
     vc = await voice_channel.connect()
 
 @bot.event
@@ -130,7 +130,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
 
 @bot.event
 async def on_message(msg):
-    if msg.author.bot or msg.channel.id != 1437271857140076606 or not vc:
+    if msg.author.bot or msg.channel.id != 1524790106278596912 or not vc:
         return
     data = read_data()
     if str(msg.author.id) not in data["user_settings"]:

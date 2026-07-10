@@ -26,6 +26,8 @@ def write_data(data):
     return open("data.json", "w").write(json.dumps(data))
 
 def _play_next(error=None):
+    if error:
+        print(f"Playback error: {error}")
     if queue:
         msg = queue.popleft()
         filename = f"{msg.id}.mp3"
@@ -41,7 +43,10 @@ def _play_next(error=None):
         if not message: return
         generate_tts(message, voice, filename)
         def after(error):
-            os.remove(filename)
+            try:
+                os.remove(filename)
+            except Exception as e:
+                print(f"Failed to remove {filename}: {e}")
             _play_next()
         vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
 
@@ -49,7 +54,13 @@ def _play_next(error=None):
 async def on_ready():
     global vc, voice_channel
     await tree.sync()
-    print("UniTTS is online!")
+    for f in os.listdir():
+        if f.endswith(".mp3") and f != "mibombo.mp3":
+            try:
+                os.remove(f)
+            except Exception:
+                pass
+    print("StarTTS is online!")
     guild = bot.get_guild(1524790105657704539)
     voice_channel = guild.get_channel(1524790106278596912)
     vc = await voice_channel.connect()
@@ -101,9 +112,7 @@ async def on_message(msg):
         write_data(data)
 
     always_speak = data["user_settings"][str(msg.author.id)]["always_speak"]
-    if msg.content == "MI BOMBO":
-        vc.play(discord.FFmpegPCMAudio(source="mibombo.mp3"))
-    elif msg.content.startswith("$") or always_speak:
+    if msg.content.startswith("$") or always_speak:
         if len(msg.content) > 500:
             await msg.channel.send(f"<@{msg.author.id}> Your message is too long! (Max 500 Characters)")
             return
@@ -123,9 +132,12 @@ async def on_message(msg):
             if not message or not any(c.isalpha() for c in message): return
             generate_tts(message, voice, filename)
             def after(error):
-                os.remove(filename)
+                try:
+                    os.remove(filename)
+                except Exception as e:
+                    print(f"Failed to remove {filename}: {e}")
                 _play_next()
-            if not vc.is_playing(): # the fuck? this can happen sometimes, idk why.
+            if not vc.is_playing():
                 vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
             else:
                 queue.append(msg)

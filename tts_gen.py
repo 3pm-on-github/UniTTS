@@ -2,6 +2,12 @@ import subprocess, random, requests, os
 from gtts import gTTS # type: ignore
 
 def generate_tts(message, voice, filename):
+    if message == "MI BOMBO":
+        os.system("cp mibombo.mp3 "+filename)
+        return
+    elif message == "fish":
+        os.system("cp fish.mp3 "+filename)
+        return
     if voice["type"] == "gtts":
         tts = gTTS(message, lang=voice["language"])
         tts.save(filename)

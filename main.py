@@ -10,7 +10,6 @@ tree = app_commands.CommandTree(bot)
 voice_channel = None
 vc = None
 queue = deque()
-music_queue = deque()
 language_choices = []
 langs = {"de":"German","en":"English","es":"Spanish","fi":"Finnish","fr":"French","hu":"Hungarian","id":"Indonesian","is":"Icelandic","it":"Italian","ja":"Japanese","ko":"Korean","lt":"Lithuanian","ne":"Nepali","nl":"Dutch","no":"Norwegian","pa":"Punjabi (Gurmukhi)","pl":"Polish","pt-PT":"Portuguese (Portugal)","ro":"Romanian","ru":"Russian","sv":"Swedish","tr":"Turkish","uk":"Ukrainian","vi":"Vietnamese","zh-CN":"Chinese (Simplified)"}
 for lang_code, lang_name in langs.items():
@@ -26,13 +25,8 @@ def read_data():
 def write_data(data):
     return open("data.json", "w").write(json.dumps(data))
 
-current_audio_source = None  # 'music' or 'tts'
-
 def _play_next(error=None):
-    global current_audio_source
-    
-    # If we're currently playing music, check if there's TTS to play over it
-    if current_audio_source == 'music' and queue:
+    if queue:
         msg = queue.popleft()
         filename = f"{msg.id}.mp3"
         voice = read_data()["user_settings"][str(msg.author.id)]["voice"]
@@ -46,51 +40,10 @@ def _play_next(error=None):
         message = message.encode("ascii", "ignore").decode("ascii")
         if not message: return
         generate_tts(message, voice, filename)
-        
-        def after_tts(error):
-            os.remove(filename)
-            # After TTS finishes, resume music if nothing else is queued
-            if music_queue:
-                _play_next()
-            else:
-                current_audio_source = None
-        
-        vc.play(discord.FFmpegPCMAudio(source=filename), after=after_tts)
-        current_audio_source = 'tts'
-    
-    # If nothing is playing or we just finished TTS, play from music queue
-    elif (current_audio_source is None or current_audio_source == 'tts') and music_queue:
-        music_file = music_queue.popleft()
-        def after_music(error):
-            os.remove(music_file)
-            current_audio_source = None
-            _play_next()
-        vc.play(discord.FFmpegPCMAudio(source=music_file), after=after_music)
-        current_audio_source = 'music'
-    
-    # If nothing is playing and no music in queue, play TTS
-    elif current_audio_source is None and queue:
-        msg = queue.popleft()
-        filename = f"{msg.id}.mp3"
-        voice = read_data()["user_settings"][str(msg.author.id)]["voice"]
-        message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
-        if message.startswith("https://"): return
-        for mention in msg.mentions:
-            name = mention.nick or mention.global_name
-            message = re.sub(rf"<@!?{mention.id}>", name, message)
-        message = re.sub(r"<t:\d+:\w+>", "", message)
-        message = re.sub(r"<:\w+:\d+>", "", message)
-        message = message.encode("ascii", "ignore").decode("ascii")
-        if not message: return
-        generate_tts(message, voice, filename)
-        
         def after(error):
             os.remove(filename)
-            current_audio_source = None
             _play_next()
-        
         vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
-        current_audio_source = 'tts'
 
 @bot.event
 async def on_ready():
@@ -130,7 +83,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
 
 @bot.event
 async def on_message(msg):
-    if msg.author.bot or msg.channel.id != 1524790106278596912 or not vc:
+    if msg.author.bot or msg.channel.id != 1437271857140076606 or not vc:
         return
     data = read_data()
     if str(msg.author.id) not in data["user_settings"]:
@@ -149,16 +102,33 @@ async def on_message(msg):
 
     always_speak = data["user_settings"][str(msg.author.id)]["always_speak"]
     if msg.content == "MI BOMBO":
-        music_queue.appendleft("mibombo.mp3")
-        if current_audio_source is None:
-            _play_next()
+        vc.play(discord.FFmpegPCMAudio(source="mibombo.mp3"))
     elif msg.content.startswith("$") or always_speak:
         if len(msg.content) > 500:
             await msg.channel.send(f"<@{msg.author.id}> Your message is too long! (Max 500 Characters)")
             return
-        queue.append(msg)
-        if current_audio_source is None:
-            _play_next()
+        if vc.is_playing():
+            queue.append(msg)
+        else:
+            filename = f"{msg.id}.mp3"
+            voice = data["user_settings"][str(msg.author.id)]["voice"]
+            message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
+            if message.startswith("https://"): return
+            for mention in msg.mentions:
+                name = mention.nick or mention.global_name or mention.name
+                message = re.sub(rf"<@!?{mention.id}>", name, message)
+            message = re.sub(r"<t:\d+:\w+>", "", message)
+            message = re.sub(r"<:\w+:\d+>", "", message)
+            message = message.encode("ascii", "ignore").decode("ascii")
+            if not message or not any(c.isalpha() for c in message): return
+            generate_tts(message, voice, filename)
+            def after(error):
+                os.remove(filename)
+                _play_next()
+            if not vc.is_playing(): # the fuck? this can happen sometimes, idk why.
+                vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
+            else:
+                queue.append(msg)
 
 @tree.command(name="ping", description="Ping...")
 async def ping(interaction: discord.Interaction):
@@ -231,27 +201,5 @@ async def set_voice(
     }
     write_data(data)
     await interaction.response.send_message("Updated settings!", ephemeral=True)
-
-@tree.command(name="play", description="Play an MP3 file")
-@app_commands.describe(file="MP3 file to play")
-async def play(interaction: discord.Interaction, file: discord.Attachment):
-    if not file.filename.lower().endswith('.mp3'):
-        await interaction.response.send_message("Please upload an MP3 file.", ephemeral=True)
-        return
-    
-    await interaction.response.defer(ephemeral=True)
-    
-    # Save the file temporarily
-    temp_file = f"temp_{interaction.id}_{file.filename}"
-    await file.save(temp_file)
-    
-    # Add to music queue
-    music_queue.append(temp_file)
-    
-    # If nothing is playing, start playing
-    if current_audio_source is None:
-        _play_next()
-    
-    await interaction.followup.send(f"Added {file.filename} to the queue!", ephemeral=True)
 
 bot.run(os.getenv("BOT_TOKEN"))

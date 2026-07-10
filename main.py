@@ -54,12 +54,12 @@ def _play_next(error=None):
 async def on_ready():
     global vc, voice_channel
     await tree.sync()
-    #for f in os.listdir():
-    #    if f.endswith(".mp3") and f != "mibombo.mp3" and f != "fish.mp3":
-    #        try:
-    #            os.remove(f)
-    #        except Exception:
-    #            pass
+    for f in os.listdir():
+        if f.endswith(".mp3") and f != "mibombo.mp3" and f != "fish.mp3":
+            try:
+                os.remove(f)
+            except Exception:
+                pass
     print("StarTTS is online!")
     guild = bot.get_guild(1524790105657704539)
     voice_channel = guild.get_channel(1524790106278596912)
@@ -94,6 +94,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
 
 @bot.event
 async def on_message(msg):
+    print(f"[on_message] channel={msg.channel.id} content={msg.content!r} vc={vc}")
     if msg.author.bot or msg.channel.id != 1437271857140076606 or not vc:
         return
     data = read_data()

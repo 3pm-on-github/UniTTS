@@ -8,6 +8,9 @@ def generate_tts(message, voice, filename):
     elif message == "fish":
         os.system("cp fish.mp3 "+filename)
         return
+    elif message == "Hi! I'm the Joke-Explainer 7000, and I'm here to be your guide.":
+        os.system("cp welcome.mp3 "+filename)
+        return
     if voice["type"] == "gtts":
         tts = gTTS(message, lang=voice["language"])
         tts.save(filename)

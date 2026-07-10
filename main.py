@@ -97,7 +97,7 @@ async def on_ready():
     global vc, voice_channel
     await tree.sync()
     print("UniTTS is online!")
-    guild = bot.get_guild(1437258836896514212)
+    guild = bot.get_guild(1524790105657704539)
     voice_channel = guild.get_channel(1524790106278596912)
     vc = await voice_channel.connect()
 

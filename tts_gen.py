@@ -11,6 +11,15 @@ def generate_tts(message, voice, filename):
     elif message == "Hi! I'm the Joke-Explainer 7000, and I'm here to be your guide.":
         os.system("cp welcome.mp3 "+filename)
         return
+    elif message == "and i was like":
+        os.system("cp andiwaslike.mp3 "+filename)
+        return
+    elif message == "penis":
+        os.system("cp penis.mp3 "+filename)
+        return
+    elif message == "oh":
+        os.system("cp oh.mp3 "+filename)
+        return
     if voice["type"] == "gtts":
         tts = gTTS(message, lang=voice["language"])
         tts.save(filename)

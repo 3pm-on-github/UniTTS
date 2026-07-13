@@ -96,6 +96,8 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
 async def on_message(msg):
     if msg.author.bot or msg.channel.id != 1524790106278596912 or not vc:
         return
+    if not msg.guild.voice_client:
+        vc = await voice_channel.connect()
     data = read_data()
     if str(msg.author.id) not in data["user_settings"]:
         data["user_settings"][str(msg.author.id)] = {

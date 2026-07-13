@@ -149,6 +149,7 @@ async def on_message(msg):
             filename = f"{msg.id}.mp3"
             voice = data["user_settings"][str(msg.author.id)]["voice"]
             message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
+            if message.startswith("https://"): return
             message = filter(message, msg)
             if not message or not any(c.isalpha() for c in message): return
             generate_tts(message, voice, filename)

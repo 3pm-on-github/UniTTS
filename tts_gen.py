@@ -14,11 +14,26 @@ def generate_tts(message, voice, filename):
     elif message == "and i was like":
         os.system("cp andiwaslike.mp3 "+filename)
         return
+    elif message == "and i was like (slowed + reverb)":
+        os.system("cp andiwaslikeremix.mp3 "+filename)
+        return
     elif message == "penis":
         os.system("cp penis.mp3 "+filename)
         return
     elif message == "oh":
         os.system("cp oh.mp3 "+filename)
+        return
+    elif message == "penis penis penis penis penis penis":
+        os.system("cp penisx6.mp3 "+filename)
+        return
+    elif message == "oh (slowed + reverb)":
+        os.system("cp ohremix.mp3 "+filename)
+        return
+    elif message == "penis (slowed + reverb)":
+        os.system("cp remix.mp3 "+filename)
+        return
+    elif message == "penis penis penis penis penis penis (slowed + reverb)":
+        os.system("cp remixx6.mp3 "+filename)
         return
     if voice["type"] == "gtts":
         tts = gTTS(message, lang=voice["language"])

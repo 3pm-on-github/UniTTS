@@ -31,9 +31,9 @@ def filter(message, msg):
         name = mention.nick or mention.global_name
         message = re.sub(rf"<@!?{mention.id}>", name, message)
     print("STEP 1 -", message)
-    message = re.sub(r"[+\w+](https://\w)", "", message)
+    message = re.sub(r"\[([^\]]+)\]\(https://\S+\)", r"\1", message)
     print("STEP 2 -", message)
-    message = re.sub(r"https://\w+", "", message)
+    message = re.sub(r"https://\S+", "", message)
     print("STEP 3 -", message)
     message = re.sub(r"<t:\d+:\w+>", "", message)
     print("STEP 4 -", message)

@@ -71,7 +71,7 @@ async def on_ready():
     global vc, voice_channel
     await tree.sync()
     for f in os.listdir():
-        if f.endswith(".mp3") and f != "mibombo.mp3" and f != "fish.mp3" and f != "welcome.mp3" and f != "andiwaslike.mp3" and f != "penis.mp3" and f != "oh.mp3":
+        if f.endswith(".mp3") and f != "mibombo.mp3" and f != "fish.mp3" and f != "welcome.mp3" and f != "andiwaslike.mp3" and f != "penis.mp3" and f != "oh.mp3" and f != "andiwaslikeremix.mp3" and f != "penisx6.mp3" and f != "ohremix.mp3" and f != "remixx6.mp3" and f != "remix.mp3":
             try:
                 os.remove(f)
             except Exception:

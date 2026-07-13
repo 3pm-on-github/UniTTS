@@ -6,7 +6,12 @@ sfx_list = {
     "Hi! I'm the Joke-Explainer 7000, and I'm here to be your guide.": "welcome.mp3",
     "and i was like": "andiwaslike.mp3",
     "penis": "penis.mp3",
-    "oh": "oh.mp3"
+    "penis penis penis penis penis penis": "penisx6.mp3",
+    "oh": "oh.mp3",
+    "oh (slowed + reverb)": "ohremix.mp3",
+    "and i was like (slowed + reverb)": "andiwaslikeremix.mp3",
+    "penis penis penis penis penis penis (slowed + reverb)": "remixx6.mp3",
+    "penis (slowed + reverb)": "remix.mp3"
 }
 
 def generate_tts(message, voice, filename):

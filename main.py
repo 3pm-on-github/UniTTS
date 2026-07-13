@@ -26,7 +26,6 @@ def write_data(data):
     return open("data.json", "w").write(json.dumps(data))
 
 def filter(message, msg):
-    if message.startswith("https://"): return
     for mention in msg.mentions:
         name = mention.nick or mention.global_name
         message = re.sub(rf"<@!?{mention.id}>", name, message)
@@ -36,6 +35,7 @@ def filter(message, msg):
     message = re.sub(r"<:\w+:\d+>", "", message)
     message = re.sub(r"<a:\w+:\d+>", "", message)
     message = message.encode("ascii", "ignore").decode("ascii")
+    return message
 
 def _play_next(error=None):
     if error:
@@ -45,6 +45,7 @@ def _play_next(error=None):
         filename = f"{msg.id}.mp3"
         voice = read_data()["user_settings"][str(msg.author.id)]["voice"]
         message = msg.content[1:].strip() if msg.content.startswith("$") else msg.content.strip()
+        if message.startswith("https://"): return
         message = filter(message, msg)
         if not message: return
         generate_tts(message, voice, filename)

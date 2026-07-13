@@ -1,25 +1,19 @@
 import subprocess, random, requests, os
 from gtts import gTTS # type: ignore
+sfx_list = {
+    "MI BOMBO": "mibombo.mp3",
+    "fish": "fish.mp3",
+    "Hi! I'm the Joke-Explainer 7000, and I'm here to be your guide.": "welcome.mp3",
+    "and i was like": "andiwaslike.mp3",
+    "penis": "penis.mp3",
+    "oh": "oh.mp3"
+}
 
 def generate_tts(message, voice, filename):
-    if message == "MI BOMBO":
-        os.system("cp mibombo.mp3 "+filename)
-        return
-    elif message == "fish":
-        os.system("cp fish.mp3 "+filename)
-        return
-    elif message == "Hi! I'm the Joke-Explainer 7000, and I'm here to be your guide.":
-        os.system("cp welcome.mp3 "+filename)
-        return
-    elif message == "and i was like":
-        os.system("cp andiwaslike.mp3 "+filename)
-        return
-    elif message == "penis":
-        os.system("cp penis.mp3 "+filename)
-        return
-    elif message == "oh":
-        os.system("cp oh.mp3 "+filename)
-        return
+    for item in sfx_list:
+        if message == item:
+            os.system(f"cp assets/audio/{sfx_list[item]} {filename}")
+            return
     if voice["type"] == "gtts":
         tts = gTTS(message, lang=voice["language"])
         tts.save(filename)

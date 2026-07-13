@@ -94,6 +94,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
 
 @bot.event
 async def on_message(msg):
+    global vc
     if msg.author.bot or msg.channel.id != 1524790106278596912 or not vc:
         return
     if not msg.guild.voice_client:

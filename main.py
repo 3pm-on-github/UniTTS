@@ -1,4 +1,4 @@
-import discord, json, os, re, sys, time, traceback
+import discord, json, os, re, sys, time, traceback, signal, asyncio
 import dotenv # type: ignore
 from collections import deque
 from discord import app_commands
@@ -49,6 +49,13 @@ def _play_next(error=None):
                 print(f"Failed to remove {filename}: {e}")
             _play_next()
         vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
+
+async def shutdown():
+    await bot.close()
+
+def signal_handler():
+    print("Shutting down...")
+    asyncio.create_task(shutdown())
 
 @bot.event
 async def on_ready():
@@ -217,4 +224,6 @@ async def set_voice(
     write_data(data)
     await interaction.response.send_message("Updated settings!", ephemeral=True)
 
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 bot.run(os.getenv("BOT_TOKEN"))

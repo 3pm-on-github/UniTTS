@@ -28,7 +28,10 @@ def write_data(data):
 def filter(message, msg):
     for mention in msg.mentions:
         name = mention.nick or mention.global_name
-        message = re.sub(rf"<@!?{mention.id}>", name, message)
+        try:
+            message = re.sub(rf"<@!?{mention.id}>", name, message)
+        except TypeError:
+            pass
     message = re.sub(r"\[([^\]]+)\]\(https://\S+\)", r"\1", message)
     message = re.sub(r"https://\S+", "", message)
     message = re.sub(r"<t:\d+:\w+>", "", message)
@@ -36,6 +39,10 @@ def filter(message, msg):
     message = re.sub(r"<a:\w+:\d+>", "", message)
     message = message.encode("ascii", "ignore").decode("ascii")
     return message
+
+async def _connect_to_vc():
+    global vc
+    vc = await voice_channel.connect()
 
 def _play_next(error=None):
     if error:
@@ -55,7 +62,10 @@ def _play_next(error=None):
             except Exception as e:
                 print(f"Failed to remove {filename}: {e}")
             _play_next()
-        vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
+        try:
+            vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
+        except discord.errors.ClientException:
+            asyncio.run_coroutine_threadsafe(_connect_to_vc)
 
 async def shutdown():
     await bot.close()
@@ -110,11 +120,8 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
 
 @bot.event
 async def on_message(msg):
-    global vc
     if msg.author.bot or msg.channel.id != 1524790106278596912 or not vc:
         return
-    if not msg.guild.voice_client:
-        vc = await voice_channel.connect()
     data = read_data()
     if str(msg.author.id) not in data["user_settings"]:
         data["user_settings"][str(msg.author.id)] = {
@@ -152,7 +159,10 @@ async def on_message(msg):
                     print(f"Failed to remove {filename}: {e}")
                 _play_next()
             if not vc.is_playing():
-                vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
+                try:
+                    vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
+                except discord.errors.ClientException:
+                    asyncio.run_coroutine_threadsafe(_connect_to_vc)
             else:
                 queue.append(msg)
 

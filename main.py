@@ -65,7 +65,7 @@ def _play_next(error=None):
         try:
             vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
         except discord.errors.ClientException:
-            asyncio.run_coroutine_threadsafe(_connect_to_vc)
+            asyncio.run(_connect_to_vc)
 
 async def shutdown():
     await bot.close()
@@ -162,7 +162,7 @@ async def on_message(msg):
                 try:
                     vc.play(discord.FFmpegPCMAudio(source=filename), after=after)
                 except discord.errors.ClientException:
-                    asyncio.run_coroutine_threadsafe(_connect_to_vc)
+                    asyncio.run(_connect_to_vc)
             else:
                 queue.append(msg)
 

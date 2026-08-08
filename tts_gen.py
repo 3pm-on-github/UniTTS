@@ -29,26 +29,19 @@ def generate_tts(message, voice, filename):
         mouth = str(voice["mouth"])
         throat = str(voice["throat"])
         randomnum = random.randint(0, 999)
-        if os.name == "nt":
-            subprocess.run([
-                "./assets/executables/sam.exe",
-                "-wav", str(randomnum)+".wav",
-                message,
-                "-pitch", str(pitch),
-                "-speed", str(speed),
-                "-mouth", str(mouth),
-                "-throat", str(throat),
-            ])
-        else:
-            subprocess.run([
-                "./assets/executables/sam" if platform.machine().lower() != "arm64" or platform.machine().lower() != "aarch64" else "./assets/executables/sam-arm",
-                "-wav", str(randomnum)+".wav",
-                message,
-                "-pitch", str(pitch),
-                "-speed", str(speed),
-                "-mouth", str(mouth),
-                "-throat", str(throat),
-            ])
+        executable = ""
+        if os.name == "nt": executable = "./assets/executables/sam.exe"
+        elif platform.machine() == "arm64" or platform.machine() == "aarch64": executable = "./assets/executables/sam-arm"
+        else: executable = "./assets/executables/sam"
+        subprocess.run([
+            executable,
+            "-wav", str(randomnum)+".wav",
+            message,
+            "-pitch", str(pitch),
+            "-speed", str(speed),
+            "-mouth", str(mouth),
+            "-throat", str(throat),
+        ])
         os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=0.5\" -b:a 320k {filename}")
         os.system(f"rm {str(randomnum)}.wav")
     elif voice["type"] == "ms-sam":

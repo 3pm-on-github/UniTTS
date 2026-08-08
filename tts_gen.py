@@ -48,8 +48,8 @@ def generate_tts(message, voice, filename):
                 "-mouth", str(mouth),
                 "-throat", str(throat),
             ])
-            os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=0.5\" -b:a 320k {filename}")
-            os.system(f"rm {str(randomnum)}.wav")
+        os.system(f"ffmpeg -i {str(randomnum)}.wav -af \"volume=0.5\" -b:a 320k {filename}")
+        os.system(f"rm {str(randomnum)}.wav")
     elif voice["type"] == "ms-sam":
         randomnum = random.randint(0, 999)
         pitch = str(voice["pitch"])

@@ -1,8 +1,8 @@
 .env
 *.mp3
 *.wav
+__pycache__
 data.json
-sam*
 logs
 !mibombo.mp3
 !fish.mp3

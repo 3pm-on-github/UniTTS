@@ -1,5 +1,7 @@
 import subprocess, random, requests, os, platform
 from gtts import gTTS # type: ignore
+
+print(platform.machine())
 sfx_list = {
     "MI BOMBO": "mibombo.mp3",
     "fish": "fish.mp3",

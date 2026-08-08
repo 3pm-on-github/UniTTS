@@ -15,7 +15,6 @@ sfx_list = {
 }
 
 def generate_tts(message, voice, filename):
-    print(platform.machine())
     for item in sfx_list:
         if message == item:
             os.system(f"cp assets/audio/{sfx_list[item]} {filename}")
@@ -31,8 +30,12 @@ def generate_tts(message, voice, filename):
         randomnum = random.randint(0, 999)
         executable = ""
         if os.name == "nt": executable = "./assets/executables/sam.exe"
-        elif platform.machine() == "arm64" or platform.machine() == "aarch64": executable = "./assets/executables/sam-arm"
-        else: executable = "./assets/executables/sam"
+        elif platform.machine() == "arm64" or platform.machine() == "aarch64":
+            executable = "./assets/executables/sam-arm"
+            os.system(f"chmod +x {executable}")
+        else:
+            executable = "./assets/executables/sam"
+            os.system(f"chmod +x {executable}")
         subprocess.run([
             executable,
             "-wav", str(randomnum)+".wav",

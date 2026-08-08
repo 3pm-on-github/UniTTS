@@ -1,7 +1,5 @@
 import subprocess, random, requests, os, platform
 from gtts import gTTS # type: ignore
-
-print(platform.machine())
 sfx_list = {
     "MI BOMBO": "mibombo.mp3",
     "fish": "fish.mp3",
@@ -17,6 +15,7 @@ sfx_list = {
 }
 
 def generate_tts(message, voice, filename):
+    print(platform.machine())
     for item in sfx_list:
         if message == item:
             os.system(f"cp assets/audio/{sfx_list[item]} {filename}")

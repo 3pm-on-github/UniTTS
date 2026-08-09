@@ -80,6 +80,7 @@ def handle_stop_signal(sig, frame):
 @bot.event
 async def on_ready():
     global vc, voice_channel
+    await bot.http.get_global_commands(bot.application_id)
     await tree.sync()
     for f in os.listdir():
         if f.endswith(".mp3") or f.startswith("core."):

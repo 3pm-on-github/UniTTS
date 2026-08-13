@@ -1,6 +1,7 @@
 .env
 *.mp3
 *.wav
+*.jpg
 __pycache__
 data.json
 logs

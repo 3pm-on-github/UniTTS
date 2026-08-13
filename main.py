@@ -1,4 +1,5 @@
 import discord, json, os, re, sys, time, traceback, signal, asyncio
+import aigen
 import dotenv # type: ignore
 from collections import deque
 from discord import app_commands
@@ -83,7 +84,7 @@ async def on_ready():
     await bot.http.get_global_commands(bot.application_id)
     await tree.sync()
     for f in os.listdir():
-        if f.endswith(".mp3") or f.startswith("core."):
+        if f.endswith(".mp3") or f.startswith("core.") or f.endswith(".jpg"):
             try:
                 os.remove(f)
             except Exception:
@@ -186,6 +187,18 @@ async def ping(interaction: discord.Interaction):
         await interaction.response.send_message("Skipped the TTS")
     else:
         await interaction.response.send_message("no TTS is playing you dummy dum dum")
+
+@tree.command(name="aiask", description="Ask an AI (locally hosted) a question!")
+async def aiask(interaction: discord.Interaction, prompt: str):
+    result = aigen.generate(prompt)
+    await interaction.response.send_message(f"The AI replied:\n{result}")
+
+@tree.command(name="aiimg", description="Generate an image with a (locally hosted) AI!")
+async def aiimg(interaction: discord.Interaction, prompt: str):
+    await interaction.response.defer()
+    result = aigen.generate(prompt, True)
+    await interaction.edit_original_response(content="The AI generated:", attachments=[discord.File(result)])
+    os.remove(result)
 
 @tree.command(name="set-voice", description="Sets your voice settings")
 @app_commands.describe(

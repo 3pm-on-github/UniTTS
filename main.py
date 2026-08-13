@@ -190,8 +190,9 @@ async def ping(interaction: discord.Interaction):
 
 @tree.command(name="aiask", description="Ask an AI (locally hosted) a question!")
 async def aiask(interaction: discord.Interaction, prompt: str):
+    await interaction.response.defer()
     result = aigen.generate(prompt)
-    await interaction.response.send_message(f"The AI replied:\n{result}")
+    await interaction.edit_original_response(content=f"The AI replied:\n{result}")
 
 @tree.command(name="aiimg", description="Generate an image with a (locally hosted) AI!")
 async def aiimg(interaction: discord.Interaction, prompt: str):

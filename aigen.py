@@ -1,7 +1,7 @@
 import requests, json, random
 
-imageid = str(random.randint(1, 800000))
-id = str(random.randint(1, 800000))
+imageid = str(random.randint(1, 100000))
+id = str(random.randint(1, 100000))
 
 def generate(prompt: str, image: bool = False) -> str:
     if image:
